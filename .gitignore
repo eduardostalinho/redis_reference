@@ -1,0 +1,5 @@
+dump.rdb
+prognoos_redis/
+reference.so*/
+*.o
+lib.dSYM/

@@ -14,3 +14,9 @@ set store.com:iid:10 "{id: 10, price:30}"
 set all "{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10}"
 
 reference.query store.com:iid: user
+
+set list "item:1 item:2 item:3"
+set item:1 "{id: 1}"
+set item:2 "{id: 2}"
+set item:3 "{id: 3}"
+mget item:1 item:2 item:3

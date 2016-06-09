@@ -13,4 +13,4 @@ set store.com:iid:10 "{id: 10, price:30}"
 
 set all "{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10},{id: 1, price:10}"
 
-reference.query store.com user
+reference.query store.com:iid: user

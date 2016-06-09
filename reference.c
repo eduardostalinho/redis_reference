@@ -9,7 +9,7 @@ char * _getKey(RedisModuleCtx *ctx, char *c_key_str) {
     size_t len;
     RedisModuleKey *key;
 
-    RedisModuleString *key_str = 
+    RedisModuleString *key_str =
         RedisModule_CreateString(ctx, c_key_str, strlen(c_key_str));
 
     key = RedisModule_OpenKey(ctx, key_str, REDISMODULE_READ);
@@ -30,7 +30,7 @@ char** split_in(char *str, char sep, int *count) {
             (*count)++;
         }
     }
-    
+
     (*count)++;
     i = 0;
 
@@ -74,68 +74,76 @@ char* rconcat_results(RedisModuleCtx *ctx, char **results, int len, char sep) {
 }
 
 int RefQuery(RedisModuleCtx *ctx, RedisModuleString **argv, int argc) {
-  char prefix[256];
-  char element_key[256];
-  char *query_result;
-  char *cid, *original_key;
+    char *prefix,
+         *list_value,
+         *query_result,
+         *original_key,
+         *original_list_value;
 
-  size_t j, len, cid_len, original_key_len;
-  int i = 0, list_len = 0;
+    char **keys,
+         **list_values;
 
-  RedisModuleKey *key;
+    size_t j,
+           len,
+           cid_len,
+           original_key_len;
 
-  if (argc < 3) return RedisModule_WrongArity(ctx);
+    int i = 0,
+        list_len = 0;
 
-  cid = (char*) RedisModule_StringPtrLen(argv[1], &cid_len);
-  sprintf(prefix, "%s:%s:", cid, "iid");
+    RedisModuleKey *key;
+    RedisModuleString *redis_str;
 
-  original_key = (char*) RedisModule_StringPtrLen(argv[2], &original_key_len);
+    if (argc < 3) {
+        return RedisModule_WrongArity(ctx);
+    }
 
-  key = RedisModule_OpenKey(ctx, argv[2], REDISMODULE_READ);
+    prefix = (char*) RedisModule_StringPtrLen(argv[1], &cid_len);
+    original_key = (char*) RedisModule_StringPtrLen(argv[2], &original_key_len);
 
-  len = RedisModule_ValueLength(key);
+    key = RedisModule_OpenKey(ctx, argv[2], REDISMODULE_READ);
+    len = RedisModule_ValueLength(key);
 
-  char *myptr = RedisModule_StringDMA(key, &len, REDISMODULE_READ);
-  char *o = malloc(sizeof(char) * (len + 1));
-  strcpy(o, myptr);
+    original_list_value = RedisModule_StringDMA(key, &len, REDISMODULE_READ);
+    list_value = malloc(sizeof(char) * (len + 1));
+    strcpy(list_value, original_list_value);
 
-  char **list_values = split_in(o, ',', &list_len);
-  char **keys = (char**) malloc(sizeof(char*) * list_len);
+    list_values = split_in(list_value, ',', &list_len);
+    keys = (char**) malloc(sizeof(char*) * list_len);
 
-  for (i = 0; i < list_len; i++) {
-      keys[i] = (char*) malloc(
-          sizeof(char) * (1 + strlen(prefix) + strlen(list_values[i])));
-  
-      snprintf(keys[i], 1 + strlen(prefix) + strlen(list_values[i]), 
-               "%s%s", prefix, list_values[i]);
-  }
+    for (i = 0; i < list_len; i++) {
+        keys[i] = (char*) malloc(
+            sizeof(char) * (1 + strlen(prefix) + strlen(list_values[i])));
+        snprintf(keys[i], 1 + strlen(prefix) + strlen(list_values[i]),
+                 "%s%s", prefix, list_values[i]);
+    }
 
-  query_result = rconcat_results(ctx, keys, list_len, ':');
+    query_result = rconcat_results(ctx, keys, list_len, ':');
 
-  for (i = 0; i < list_len; i++) {
-      free(keys[i]);
-  }
+    for (i = 0; i < list_len; i++) {
+        free(keys[i]);
+    }
 
-  RedisModule_CloseKey(key);
+    RedisModule_CloseKey(key);
 
-  RedisModuleString *redis_str;
-  redis_str = RedisModule_CreateString(ctx, query_result, strlen(query_result));
+    redis_str = RedisModule_CreateString(ctx, query_result,
+                                         strlen(query_result));
 
-  free(list_values);
-  free(keys);
-  free(o);
-  free(query_result);
+    free(keys);
+    free(list_values);
+    free(list_value);
+    free(query_result);
 
-  return RedisModule_ReplyWithString(ctx, redis_str);
+    return RedisModule_ReplyWithString(ctx, redis_str);
 }
 
 int RedisModule_OnLoad(RedisModuleCtx *ctx) {
-  if (RedisModule_Init(ctx, "reference", 1,
+    if (RedisModule_Init(ctx, "reference", 1,
                        REDISMODULE_APIVER_1) == REDISMODULE_ERR) {
-    return REDISMODULE_ERR;
-  }
-  if (RedisModule_CreateCommand(ctx, "reference.query", RefQuery,
+        return REDISMODULE_ERR;
+    }
+    if (RedisModule_CreateCommand(ctx, "reference.query", RefQuery,
                                 "readonly", 1,1,1) == REDISMODULE_ERR) {
-    return REDISMODULE_ERR;
-  }
+        return REDISMODULE_ERR;
+    }
 }

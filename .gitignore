@@ -2,4 +2,6 @@ dump.rdb
 prognoos_redis/
 reference.so*/
 *.o
+*.so
 lib.dSYM/
+

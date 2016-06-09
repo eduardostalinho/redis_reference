@@ -1,16 +1,54 @@
 # Redis Reference module
 
-**WARNING** Don't use this on production!
+Before understand why we need references in redis check our use-case.
 
-This module allow users to query objects by reference. 
+## Our use-case
+
+We store thousands of lists of items. So we basically have two types of objects:
+
+* Items
+* Lists of items
+
+An item is inside one or more lists. A popular item will be inside many
+lists. This model has 2 big problems:
+
+* Space
+* Update complexity
+
+### Space problem
+
+Suppose you have a very popular item inside thousands of lists. Without references
+you'll have to keep the whole item information inside all of those lists but
+the content of the item is just one so in practice this model has many copies
+of the same item thus wasting memory space.
+
+### Update problem
+
+If you keep coopies of the item content inside many lists once this item has
+some attribute updates, you'll need to update all copies. This is not efficient
+specially for popular itens. Another problem is that you'll have to keep track
+of what lists contains a particular item.
+
+## How a reference work in practice?
+
+Our recommendation engine selected the products 1, 2 and 3 to some user identified
+just by "user9". This module will allow your application to query the list which the
+content is `1,2,3` and natively change 1 by `{id: 1, price:10}` and so on.
 
 ```
-set user 1,2,3
+set user9 1,2,3
 set store.com:iid:1 "{id: 1, price:10}"
 set store.com:iid:2 "{id: 2, price:20}"
 set store.com:iid:3 "{id: 3, price:30}"
 
-reference.query store.com user
+reference.query store.com:iid user9
+```
+
+In order to do that you must specify a key prefix `sotore.com:iid` and
+the original list key. They query above will return:
+
+```
+{id: 1, price:10},{id: 2, price: 30},{id: 3, price:30}
 ```
 
 ## Building

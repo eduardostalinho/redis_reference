@@ -65,7 +65,7 @@ char* rconcat_results(RedisModuleCtx *ctx, char **results, int len, char sep) {
         for (j = 0; j < strlen(current); j++, p++) {
             final[p] = current[j];
         }
-        final[p++] = ':';
+        final[p++] = sep;
     }
 
     final[total_size] = '\0';

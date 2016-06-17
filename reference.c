@@ -118,7 +118,7 @@ int RefQuery(RedisModuleCtx *ctx, RedisModuleString **argv, int argc) {
                  "%s%s", prefix, list_values[i]);
     }
 
-    query_result = rconcat_results(ctx, keys, list_len, ':');
+    query_result = rconcat_results(ctx, keys, list_len, ',');
 
     for (i = 0; i < list_len; i++) {
         free(keys[i]);
